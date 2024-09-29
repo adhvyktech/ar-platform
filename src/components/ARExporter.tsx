@@ -121,7 +121,7 @@ const ARExporter: React.FC<{ experience: ARExperience }> = ({ experience }) => {
                 )}
                 {qrCode && (
                   <div className={styles.qrCode}>
-                    <img src={qrCode} alt="QR Code for AR Experience" />
+                    <Image src={qrCode} alt="QR Code for AR Experience" />
                   </div>
                 )}
               </div>

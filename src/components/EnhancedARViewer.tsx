@@ -108,6 +108,10 @@ const EnhancedARViewer: React.FC<{ experience: ARExperience }> = ({ experience }
   const [showControls, setShowControls] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef(null);
+
+  // Load models outside of the callback
+  const { scene: modelScene } = useGLTF('/path/to/your/model.glb');
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -127,6 +131,8 @@ const EnhancedARViewer: React.FC<{ experience: ARExperience }> = ({ experience }
       requestAnimationFrame(animate);
     };
     animate();
+    
+    // Your initialization code here
   }, [isPlaying]);
 
   const handleElementClick = (element: ARElement) => {
@@ -135,7 +141,7 @@ const EnhancedARViewer: React.FC<{ experience: ARExperience }> = ({ experience }
 
   return (
     <div ref={containerRef} className={styles.enhancedARViewer}>
-      <Canvas camera={{ position: [0, 0, 5] }}>
+      <Canvas ref={canvasRef} camera={{ position: [0, 0, 5] }}>
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} />
         {experience.elements.map((element) => (
@@ -146,6 +152,7 @@ const EnhancedARViewer: React.FC<{ experience: ARExperience }> = ({ experience }
             onSelect={() => handleElementClick(element)}
           />
         ))}
+        <primitive object={modelScene.clone()} position={[0, 0, 0]} />
         <OrbitControls />
       </Canvas>
       {showControls && (

@@ -10,6 +10,18 @@ interface TrackingResult {
   data: any;
 }
 
+const trackingConfig = {
+  markerUrl: '/path/to/marker.patt',
+  modelUrl: '/path/to/model.glb',
+  // Add the trailing comma here
+};
+
+const trackingConfig = {
+  markerUrl: '/path/to/marker.patt',
+  modelUrl: '/path/to/model.glb',
+  // Add the trailing comma here
+};
+
 export function useTracking(type: TrackingType) {
   const [isTracking, setIsTracking] = useState(false);
   const [result, setResult] = useState<TrackingResult | null>(null);

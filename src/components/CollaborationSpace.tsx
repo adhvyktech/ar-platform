@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, useGLTF, Html, Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Users, MessageSquare, Share2, Save } from 'lucide-react';
 import io from 'socket.io-client';
 import styles from '../styles/components/CollaborationSpace.module.css';
@@ -46,6 +46,11 @@ const CollaborationSpace: React.FC = () => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [messageInput, setMessageInput] = useState('');
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef(null);
+  const [models, setModels] = useState<{ id: number; position: [number, number, number] }[]>([]);
+
+  // Load models outside of the callback
+  const { scene: modelScene } = useGLTF('/path/to/your/model.glb');
 
   useEffect(() => {
     // Simulating user login
@@ -79,6 +84,8 @@ const CollaborationSpace: React.FC = () => {
     socket.on('chatMessage', (message: ChatMessage) => {
       setChatMessages((prevMessages) => [...prevMessages, message]);
     });
+
+    // Your initialization code here
 
     return () => {
       socket.off('users');
@@ -121,16 +128,44 @@ const CollaborationSpace: React.FC = () => {
     }
   };
 
+  const handleAddModel = () => {
+    setModels((prevModels) => [...prevModels, { id: Date.now(), position: [0, 0, 0] }]);
+  };
+
+  // AR Scene Component
   const ARScene: React.FC = () => {
     const { scene } = useThree();
+    const [loadedModels, setLoadedModels] = useState<THREE.Object3D[]>([]);
 
+    // Load models outside of the callback
     useEffect(() => {
+      const loadModel = async (url: string) => {
+        const { scene: modelScene } = await useGLTF(url);
+        setLoadedModels((prevModels) => [...prevModels, modelScene.clone()]);
+      };
+
       elements.forEach((element) => {
+        if (element.type === 'model' && element.url) {
+          loadModel(element.url);
+        }
+      });
+
+      return () => {
+        scene.children.forEach((child) => {
+          if (child.name.startsWith('element-')) {
+            scene.remove(child);
+          }
+        });
+      };
+    }, [elements, scene]);
+
+    // Add elements to the scene based on their types
+    useEffect(() => {
+      elements.forEach((element, index) => {
         let object: THREE.Object3D | null = null;
 
-        if (element.type === 'model') {
-          const { scene: modelScene } = useGLTF(element.url!);
-          object = modelScene.clone();
+        if (loadedModels[index]) {
+          object = loadedModels[index];
         } else if (element.type === 'image' || element.type === 'video') {
           const geometry = new THREE.PlaneGeometry(1, 1);
           const material = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
@@ -147,25 +182,36 @@ const CollaborationSpace: React.FC = () => {
             material.map = texture;
           }
           object = new THREE.Mesh(geometry, material);
+        } else if (element.type === 'text') {
+          const textGeometry = new THREE.TextGeometry(element.content || '', {
+            font: new THREE.FontLoader().parse(
+              require('../assets/fonts/helvetiker_regular.typeface.json')
+            ),
+            size: 0.5,
+            height: 0.1,
+          });
+          const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+          object = new THREE.Mesh(textGeometry, textMaterial);
         }
 
         if (object) {
           object.position.set(...element.position);
           object.rotation.set(...element.rotation);
           object.scale.set(...element.scale);
+          object.name = `element-${element.id}`;
           scene.add(object);
         }
       });
 
-      return () => {
-        elements.forEach((element) => {
-          const object = scene.getObjectByName(element.id);
-          if (object) {
-            scene.remove(object);
-          }
-        });
-      };
-    }, [elements, scene]);
+      // Add models from the new state
+      models.forEach((model) => {
+        const modelObject = modelScene.clone();
+        modelObject.position.set(...model.position);
+        modelObject.name = `model-${model.id}`;
+        scene.add(modelObject);
+      });
+
+    }, [elements, loadedModels, scene, models]);
 
     return null;
   };
@@ -228,12 +274,13 @@ const CollaborationSpace: React.FC = () => {
           <Button onClick={() => handleNewElement({ id: Date.now().toString(), type: 'text', position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1], content: 'New Text' })}>
             Add Text
           </Button>
+          <Button onClick={handleAddModel}>Add New Model</Button>
         </div>
         <div className={styles.arScene}>
-          <Canvas>
+          <Canvas ref={canvasRef}>
             <ARScene />
             <ambientLight intensity={0.5} />
-            <pointLight position={[10, 10, 10]} />
+            <pointLight position={10, 10, 10} />
             <OrbitControls />
           </Canvas>
         </div>

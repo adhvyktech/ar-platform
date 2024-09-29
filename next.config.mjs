@@ -15,6 +15,11 @@ const nextConfig = {
         // !! WARN !!
         ignoreBuildErrors: true,
     },
+    experimental: {
+        turbotrace: {
+            logLevel: 'error',
+        },
+    },
   }
   
   export default nextConfig;
