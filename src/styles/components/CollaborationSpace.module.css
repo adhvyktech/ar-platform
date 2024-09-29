@@ -1,0 +1,91 @@
+.collaborationSpace {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .sidebar {
+    width: 300px;
+    background-color: var(--background);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .userList {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .userList h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .userAvatar {
+    margin-right: 0.5rem;
+    cursor: pointer;
+  }
+  
+  .chat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+  }
+  
+  .chat h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .chatMessages {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+  }
+  
+  .chatMessage {
+    margin-bottom: 0.5rem;
+  }
+  
+  .chatInput {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .mainContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .toolbar {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: var(--background);
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .arScene {
+    flex: 1;
+    position: relative;
+  }
+  
+  @media (max-width: 768px) {
+    .collaborationSpace {
+      flex-direction: column;
+    }
+  
+    .sidebar {
+      width: 100%;
+      height: 300px;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+  
+    .mainContent {
+      height: calc(100vh - 300px);
+    }
+  }

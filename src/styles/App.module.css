@@ -1,0 +1,38 @@
+.app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  
+  .header {
+    background-color: var(--background);
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .navList {
+    display: flex;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .navList li {
+    margin-right: 1rem;
+  }
+  
+  .main {
+    flex-grow: 1;
+    padding: 2rem;
+  }
+  
+  @media (max-width: 768px) {
+    .navList {
+      flex-direction: column;
+    }
+  
+    .navList li {
+      margin-right: 0;
+      margin-bottom: 0.5rem;
+    }
+  }

@@ -1,0 +1,27 @@
+.exportPage {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .pageTitle {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  
+  .backButton {
+    display: block;
+    margin: 2rem auto 0;
+  }
+  
+  @media (max-width: 600px) {
+    .exportPage {
+      padding: 1rem;
+    }
+  
+    .pageTitle {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+  }

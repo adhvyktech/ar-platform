@@ -1,0 +1,56 @@
+.assetLibrary {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .title {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .uploadSection {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .tabs {
+    margin-top: 2rem;
+  }
+  
+  .assetGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .assetCard {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .assetName {
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .assetIcon {
+    width: 48px;
+    height: 48px;
+    color: var(--primary);
+  }
+  
+  @media (max-width: 768px) {
+    .uploadSection {
+      flex-direction: column;
+    }
+  
+    .assetGrid {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+  }

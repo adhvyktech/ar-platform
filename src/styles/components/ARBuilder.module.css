@@ -1,0 +1,138 @@
+.arBuilder {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.toolbar {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--background);
+  border-bottom: 1px solid var(--border);
+}
+
+.mainContent {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sceneView {
+  flex: 2;
+  position: relative;
+}
+
+.properties {
+  flex: 1;
+  padding: 1rem;
+  background-color: var(--background);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+}
+
+.vectorInput {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.timelineEditor {
+  height: 200px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.timelineControls {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--background);
+}
+
+.timeline {
+  flex: 1;
+  position: relative;
+  background-color: var(--secondary);
+  overflow-x: auto;
+}
+
+.timelineCursor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--primary);
+}
+
+.animationTrack {
+  height: 20px;
+  margin-bottom: 5px;
+  background-color: var(--accent);
+  position: relative;
+}
+
+.keyframe {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: var(--primary);
+  border-radius: 50%;
+  top: 5px;
+  transform: translateX(-50%);
+  cursor: pointer;
+}
+
+.animationList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.keyframeEditor {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.objectLabel {
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.elementList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.elementCard {
+  background-color: var(--background);
+  border: 1px solid var(--border);
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    flex-direction: column;
+  }
+
+  .properties {
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
+
+  .timelineEditor {
+    height: auto;
+  }
+
+  .animationList {
+    flex-direction: column;
+  }
+}

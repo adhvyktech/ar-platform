@@ -1,0 +1,77 @@
+.arExporter {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .tabs {
+    margin-top: 1rem;
+  }
+  
+  .exportOptions,
+  .shareOptions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .formatSelector {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .select {
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    border: 1px solid var(--border);
+  }
+  
+  .exportButton {
+    align-self: flex-start;
+  }
+  
+  .publicSwitch {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .shareableLink {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .copyButton {
+    flex-shrink: 0;
+  }
+  
+  .qrCode {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  
+  .qrCode img {
+    max-width: 150px;
+    height: auto;
+  }
+  
+  @media (max-width: 600px) {
+    .arExporter {
+      padding: 1rem;
+    }
+  
+    .shareableLink {
+      flex-direction: column;
+    }
+  
+    .copyButton {
+      width: 100%;
+    }
+  }
