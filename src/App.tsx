@@ -7,7 +7,7 @@ import { default as ARViewerComponent } from './components/ARViewer';
 import AssetLibrary from './components/AssetLibrary';
 import ARBuilder from './components/ARBuilder';
 import styles from './styles/App.module.css';
-import { trackingConfig as _trackingConfig } from './hooks/useTracking';
+import { trackingConfig } from './hooks/useTracking';
 
 interface ARViewerProps {
   targetId: string;

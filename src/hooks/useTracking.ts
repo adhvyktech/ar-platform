@@ -10,13 +10,7 @@ interface TrackingResult {
   data: any;
 }
 
-const trackingConfig = {
-  markerUrl: '/path/to/marker.patt',
-  modelUrl: '/path/to/model.glb',
-  // Add the trailing comma here
-};
-
-const trackingConfig = {
+export const trackingConfig = {
   markerUrl: '/path/to/marker.patt',
   modelUrl: '/path/to/model.glb',
   // Add the trailing comma here
