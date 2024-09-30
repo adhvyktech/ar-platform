@@ -3,10 +3,23 @@ import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
 import { Button } from "@/components/ui/button"
 import Dashboard from './components/Dashboard';
-import ARViewer from './components/ARViewer';
+import { default as ARViewerComponent } from './components/ARViewer';
 import AssetLibrary from './components/AssetLibrary';
 import ARBuilder from './components/ARBuilder';
 import styles from './styles/App.module.css';
+import { trackingConfig as _trackingConfig } from './hooks/useTracking';
+
+interface ARViewerProps {
+  targetId: string;
+  markerUrl: string;
+  targetUrl: string;
+}
+
+const ARViewer: React.FC<ARViewerProps> = ({ targetId, markerUrl, targetUrl }) => {
+  return (
+    <ARViewerComponent targetId={targetId} markerUrl={markerUrl} targetUrl={targetUrl} />
+  );
+};
 
 const App: React.FC = () => {
   return (
@@ -42,9 +55,9 @@ const App: React.FC = () => {
           <main className={styles.main}>
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/viewer" element={<ARViewer />} />
+              <Route path="/viewer" element={<ARViewerComponent targetId="your-target-id" markerUrl="/path/to/marker.patt" targetUrl="/path/to/target.glb" />} />
               <Route path="/assets" element={<AssetLibrary />} />
-              <Route path="/builder" element={<ARBuilder />} />
+              <Route path="/builder" element={<ARBuilder elements={[]} onElementUpdate={() => {}} onElementAdd={() => {}} />} />
             </Routes>
           </main>
         </div>
