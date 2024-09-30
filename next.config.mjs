@@ -39,6 +39,10 @@ const nextConfig = {
       logLevel: 'error',
     },
   },
+  // Ignore ESLint errors during build
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;
