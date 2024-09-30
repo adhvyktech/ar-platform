@@ -31,6 +31,11 @@ const nextConfig = {
       },
     });
 
+    // Add support for GLTFLoader
+    config.externals.push({
+      'three/examples/jsm/loaders/GLTFLoader': 'GLTFLoader',
+    });
+
     return config;
   },
   // Enable build caching
