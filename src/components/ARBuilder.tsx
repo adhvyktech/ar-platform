@@ -6,7 +6,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Box, Image as ImageIcon, Video, Type, Trash2, Copy, Eye, EyeOff } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
-import styles from '../styles/components/ARBuilder.module.css';
 
 export interface ARElement {
   id: string;
@@ -98,14 +97,14 @@ const ARBuilder: React.FC<ARBuilderProps> = ({ elements, onElementUpdate, onElem
   };
 
   return (
-    <div className={styles.arBuilder}>
-      <Card className={styles.elementList}>
+    <div className="ar-builder">
+      <Card className="element-list">
         <CardHeader>
           <CardTitle>AR Elements</CardTitle>
           <CardDescription>Drag and drop or add elements to your AR scene</CardDescription>
         </CardHeader>
         <CardContent>
-          <div {...getRootProps()} className={styles.dropzone}>
+          <div {...getRootProps()} className="dropzone">
             <input {...getInputProps()} />
             {isDragActive ? (
               <p>Drop the files here ...</p>
@@ -113,11 +112,11 @@ const ARBuilder: React.FC<ARBuilderProps> = ({ elements, onElementUpdate, onElem
               <p>Drag 'n' drop some files here, or click to select files</p>
             )}
           </div>
-          <div className={styles.addButtons}>
+          <div className="add-buttons">
             <Button onClick={addTextElement}><Type className="mr-2 h-4 w-4" /> Add Text</Button>
             <Button onClick={add3DElement}><Box className="mr-2 h-4 w-4" /> Add 3D Model</Button>
           </div>
-          <ul className={styles.elementsList}>
+          <ul className="elements-list">
             {elements.map((element) => (
               <li key={element.id} onClick={() => setSelectedElement(element)}>
                 {element.type === 'image' && <ImageIcon />}
@@ -137,13 +136,13 @@ const ARBuilder: React.FC<ARBuilderProps> = ({ elements, onElementUpdate, onElem
         </CardContent>
       </Card>
       {selectedElement && (
-        <Card className={styles.elementProperties}>
+        <Card className="element-properties">
           <CardHeader>
             <CardTitle>Element Properties</CardTitle>
             <CardDescription>Edit the properties of the selected element</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className={styles.propertyGroup}>
+            <div className="property-group">
               <Label htmlFor="elementType">Type</Label>
               <Select
                 value={selectedElement.type}
@@ -161,7 +160,7 @@ const ARBuilder: React.FC<ARBuilderProps> = ({ elements, onElementUpdate, onElem
               </Select>
             </div>
             {selectedElement.type === 'text' && (
-              <div className={styles.propertyGroup}>
+              <div className="property-group">
                 <Label htmlFor="textContent">Text Content</Label>
                 <Input
                   id="textContent"
@@ -170,9 +169,9 @@ const ARBuilder: React.FC<ARBuilderProps> = ({ elements, onElementUpdate, onElem
                 />
               </div>
             )}
-            <div className={styles.propertyGroup}>
+            <div className="property-group">
               <Label>Position</Label>
-              <div className={styles.vectorInput}>
+              <div className="vector-input">
                 <Input
                   type="number"
                   value={selectedElement.position.x}
@@ -190,9 +189,9 @@ const ARBuilder: React.FC<ARBuilderProps> = ({ elements, onElementUpdate, onElem
                 />
               </div>
             </div>
-            <div className={styles.propertyGroup}>
+            <div className="property-group">
               <Label>Rotation</Label>
-              <div className={styles.vectorInput}>
+              <div className="vector-input">
                 <Input
                   type="number"
                   value={selectedElement.rotation.x}
@@ -210,9 +209,9 @@ const ARBuilder: React.FC<ARBuilderProps> = ({ elements, onElementUpdate, onElem
                 />
               </div>
             </div>
-            <div className={styles.propertyGroup}>
+            <div className="property-group">
               <Label>Scale</Label>
-              <div className={styles.vectorInput}>
+              <div className="vector-input">
                 <Input
                   type="number"
                   value={selectedElement.scale.x}

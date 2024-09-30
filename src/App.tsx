@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import ARBuilder, { ARElement } from './components/ARBuilder';
-import ARViewerComponent from './components/ARViewerComponent';
+import ARViewer from './components/ARViewer';
 import AssetLibrary from './components/AssetLibrary';
 import { Button } from "@/components/ui/button"
 
@@ -54,7 +54,7 @@ const App: React.FC = () => {
             <Route 
               path="/viewer" 
               element={
-                <ARViewerComponent 
+                <ARViewer 
                   targetId="sample-target-id" 
                   markerUrl="/path/to/marker.patt" 
                   targetUrl="/path/to/sample-model.glb" 
