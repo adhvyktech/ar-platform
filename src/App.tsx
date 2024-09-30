@@ -1,68 +1,81 @@
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
-import { ThemeProvider } from 'next-themes';
-import { Button } from "@/components/ui/button"
-import Dashboard from './components/Dashboard';
-import { default as ARViewerComponent } from './components/ARViewer';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import ARBuilder, { ARElement } from './components/ARBuilder';
+import ARViewerComponent from './components/ARViewerComponent';
 import AssetLibrary from './components/AssetLibrary';
-import ARBuilder from './components/ARBuilder';
-import styles from './styles/App.module.css';
-import { trackingConfig } from './hooks/useTracking';
-
-interface ARViewerProps {
-  targetId: string;
-  markerUrl: string;
-  targetUrl: string;
-}
-
-const ARViewer: React.FC<ARViewerProps> = ({ targetId, markerUrl, targetUrl }) => {
-  return (
-    <ARViewerComponent targetId={targetId} markerUrl={markerUrl} targetUrl={targetUrl} />
-  );
-};
+import { Button } from "@/components/ui/button"
 
 const App: React.FC = () => {
+  const [elements, setElements] = useState<ARElement[]>([]);
+
+  const handleElementUpdate = (updatedElement: ARElement) => {
+    setElements(prevElements =>
+      prevElements.map(el => el.id === updatedElement.id ? updatedElement : el)
+    );
+  };
+
+  const handleElementAdd = (newElement: ARElement) => {
+    setElements(prevElements => [...prevElements, newElement]);
+  };
+
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <Router>
-        <div className={styles.app}>
-          <header className={styles.header}>
-            <nav>
-              <ul className={styles.navList}>
-                <li>
-                  <Link to="/">
-                    <Button variant="link">Dashboard</Button>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/viewer">
-                    <Button variant="link">AR Viewer</Button>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/assets">
-                    <Button variant="link">Asset Library</Button>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/builder">
-                    <Button variant="link">AR Builder</Button>
-                  </Link>
-                </li>
-              </ul>
-            </nav>
-          </header>
-          <main className={styles.main}>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/viewer" element={<ARViewerComponent targetId="your-target-id" markerUrl="/path/to/marker.patt" targetUrl="/path/to/target.glb" />} />
-              <Route path="/assets" element={<AssetLibrary />} />
-              <Route path="/builder" element={<ARBuilder elements={[]} onElementUpdate={() => {}} onElementAdd={() => {}} />} />
-            </Routes>
-          </main>
-        </div>
-      </Router>
-    </ThemeProvider>
+    <Router>
+      <div className="app">
+        <header className="app-header">
+          <h1>AR Platform</h1>
+          <nav>
+            <ul>
+              <li>
+                <Link to="/">
+                  <Button variant="link">Home</Button>
+                </Link>
+              </li>
+              <li>
+                <Link to="/viewer">
+                  <Button variant="link">AR Viewer</Button>
+                </Link>
+              </li>
+              <li>
+                <Link to="/assets">
+                  <Button variant="link">Asset Library</Button>
+                </Link>
+              </li>
+              <li>
+                <Link to="/builder">
+                  <Button variant="link">AR Builder</Button>
+                </Link>
+              </li>
+            </ul>
+          </nav>
+        </header>
+        <main>
+          <Routes>
+            <Route path="/" element={<h2>Welcome to AR Platform</h2>} />
+            <Route 
+              path="/viewer" 
+              element={
+                <ARViewerComponent 
+                  targetId="your-target-id" 
+                  markerUrl="/path/to/marker.patt" 
+                  targetUrl="/path/to/target.glb" 
+                />
+              } 
+            />
+            <Route path="/assets" element={<AssetLibrary />} />
+            <Route 
+              path="/builder" 
+              element={
+                <ARBuilder 
+                  elements={elements} 
+                  onElementUpdate={handleElementUpdate} 
+                  onElementAdd={handleElementAdd} 
+                />
+              } 
+            />
+          </Routes>
+        </main>
+      </div>
+    </Router>
   );
 };
 

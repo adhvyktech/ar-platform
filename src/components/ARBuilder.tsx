@@ -3,13 +3,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Box, Image as ImageIcon, Video, Type, Trash2, Copy, Eye, EyeOff } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import styles from '../styles/components/ARBuilder.module.css';
 
-interface ARElement {
+export interface ARElement {
   id: string;
   type: 'image' | 'video' | 'text' | '3d';
   content: string;
@@ -18,12 +17,16 @@ interface ARElement {
   scale: { x: number; y: number; z: number };
 }
 
-const ARBuilder: React.FC = () => {
-  const [elements, setElements] = useState<ARElement[]>([]);
+interface ARBuilderProps {
+  elements: ARElement[];
+  onElementUpdate: (updatedElement: ARElement) => void;
+  onElementAdd: (newElement: ARElement) => void;
+}
+
+const ARBuilder: React.FC<ARBuilderProps> = ({ elements, onElementUpdate, onElementAdd }) => {
   const [selectedElement, setSelectedElement] = useState<ARElement | null>(null);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    // Handle file drop
     acceptedFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -35,11 +38,11 @@ const ARBuilder: React.FC = () => {
           rotation: { x: 0, y: 0, z: 0 },
           scale: { x: 1, y: 1, z: 1 },
         };
-        setElements((prevElements) => [...prevElements, newElement]);
+        onElementAdd(newElement);
       };
       reader.readAsDataURL(file);
     });
-  }, []);
+  }, [onElementAdd]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
@@ -52,7 +55,7 @@ const ARBuilder: React.FC = () => {
       rotation: { x: 0, y: 0, z: 0 },
       scale: { x: 1, y: 1, z: 1 },
     };
-    setElements((prevElements) => [...prevElements, newElement]);
+    onElementAdd(newElement);
   };
 
   const add3DElement = () => {
@@ -64,22 +67,18 @@ const ARBuilder: React.FC = () => {
       rotation: { x: 0, y: 0, z: 0 },
       scale: { x: 1, y: 1, z: 1 },
     };
-    setElements((prevElements) => [...prevElements, newElement]);
+    onElementAdd(newElement);
   };
 
   const updateElement = (id: string, updates: Partial<ARElement>) => {
-    setElements((prevElements) =>
-      prevElements.map((element) =>
-        element.id === id ? { ...element, ...updates } : element
-      )
-    );
+    const updatedElement = elements.find(element => element.id === id);
+    if (updatedElement) {
+      onElementUpdate({ ...updatedElement, ...updates });
+    }
   };
 
   const deleteElement = (id: string) => {
-    setElements((prevElements) => prevElements.filter((element) => element.id !== id));
-    if (selectedElement?.id === id) {
-      setSelectedElement(null);
-    }
+    // Implement delete functionality
   };
 
   const duplicateElement = (id: string) => {
@@ -94,7 +93,7 @@ const ARBuilder: React.FC = () => {
           z: elementToDuplicate.position.z,
         },
       };
-      setElements((prevElements) => [...prevElements, newElement]);
+      onElementAdd(newElement);
     }
   };
 
