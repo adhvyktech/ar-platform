@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -121,7 +122,7 @@ const ARExporter: React.FC<{ experience: ARExperience }> = ({ experience }) => {
                 )}
                 {qrCode && (
                   <div className={styles.qrCode}>
-                    <Image src={qrCode} alt="QR Code for AR Experience" />
+                    <Image src={qrCode} alt="QR Code for AR Experience" width={150} height={150} />
                   </div>
                 )}
               </div>
