@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Users, MessageSquare, Share2, Save } from 'lucide-react';
@@ -46,10 +46,9 @@ const CollaborationSpace: React.FC = () => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [messageInput, setMessageInput] = useState('');
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [models, setModels] = useState<{ id: number; position: [number, number, number] }[]>([]);
 
-  // Load models outside of the callback
   const { scene: modelScene } = useGLTF('/path/to/your/model.glb');
 
   useEffect(() => {
@@ -129,7 +128,11 @@ const CollaborationSpace: React.FC = () => {
   };
 
   const handleAddModel = () => {
-    setModels((prevModels) => [...prevModels, { id: Date.now(), position: [0, 0, 0] }]);
+    const newModel = {
+      id: Date.now(),
+      position: [Math.random() * 4 - 2, 0, Math.random() * 4 - 2] as [number, number, number],
+    };
+    setModels((prevModels) => [...prevModels, newModel]);
   };
 
   // AR Scene Component
@@ -183,15 +186,11 @@ const CollaborationSpace: React.FC = () => {
           }
           object = new THREE.Mesh(geometry, material);
         } else if (element.type === 'text') {
-          const textGeometry = new THREE.TextGeometry(element.content || '', {
-            font: new THREE.FontLoader().parse(
-              require('../assets/fonts/helvetiker_regular.typeface.json')
-            ),
-            size: 0.5,
-            height: 0.1,
+          object = new Text(element.content || '', {
+            font: '/path/to/your/font.ttf',
+            fontSize: 0.5,
+            color: 0xffffff,
           });
-          const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-          object = new THREE.Mesh(textGeometry, textMaterial);
         }
 
         if (object) {
@@ -217,74 +216,57 @@ const CollaborationSpace: React.FC = () => {
   };
 
   return (
-    <div className={styles.collaborationSpace}>
-      <div className={styles.sidebar}>
-        <div className={styles.userList}>
-          <h2>Collaborators</h2>
-          {users.map((user) => (
-            <TooltipProvider key={user.id}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Avatar className={styles.userAvatar}>
-                    <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback style={{ backgroundColor: user.color }}>
-                      {user.name.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{user.name}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ))}
-        </div>
-        <div className={styles.chat}>
-          <h2>Chat</h2>
-          <div className={styles.chatMessages} ref={chatContainerRef}>
-            {chatMessages.map((message) => (
-              <div key={message.id} className={styles.chatMessage}>
-                <strong>{users.find((u) => u.id === message.userId)?.name}: </strong>
-                {message.message}
-              </div>
-            ))}
+    <div className="collaboration-space h-screen flex flex-col">
+      <Card className="flex-grow">
+        <CardHeader>
+          <CardTitle>Collaboration Space</CardTitle>
+          <CardDescription>Work together in real-time</CardDescription>
+        </CardHeader>
+        <CardContent className="flex-grow flex">
+          <div className="w-3/4 h-full">
+            <Canvas ref={canvasRef}>
+              <ambientLight intensity={0.5} />
+              <pointLight position={[10, 10, 10]} />
+              <OrbitControls />
+              {models.map((model) => (
+                <primitive
+                  key={model.id}
+                  object={modelScene.clone()}
+                  position={model.position}
+                  scale={[0.5, 0.5, 0.5]}
+                />
+              ))}
+              <ARScene />
+            </Canvas>
           </div>
-          <form onSubmit={handleSendMessage} className={styles.chatInput}>
-            <Input
-              type="text"
-              value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
-              placeholder="Type a message..."
-            />
-            <Button type="submit">Send</Button>
+          <div className="w-1/4 h-full overflow-y-auto p-4 bg-gray-100">
+            <h3 className="text-lg font-semibold mb-4">Chat</h3>
+            <div className="space-y-2" ref={chatContainerRef}>
+              {chatMessages.map((message) => (
+                <div key={message.id} className="bg-white p-2 rounded shadow">
+                  <strong>{users.find((u) => u.id === message.userId)?.name}: </strong>
+                  {message.message}
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-between items-center">
+          <Button onClick={handleAddModel}>Add Model</Button>
+          <form onSubmit={handleSendMessage} className="flex-grow ml-4">
+            <div className="flex space-x-2">
+              <Input
+                type="text"
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
+                placeholder="Type a message..."
+                className="flex-grow"
+              />
+              <Button type="submit">Send</Button>
+            </div>
           </form>
-        </div>
-      </div>
-      <div className={styles.mainContent}>
-        <div className={styles.toolbar}>
-          <Button onClick={() => handleNewElement({ id: Date.now().toString(), type: 'model', position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1], url: '/assets/models/cube.glb' })}>
-            Add Model
-          </Button>
-          <Button onClick={() => handleNewElement({ id: Date.now().toString(), type: 'image', position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1], url: '/placeholder.svg?height=512&width=512' })}>
-            Add Image
-          </Button>
-          <Button onClick={() => handleNewElement({ id: Date.now().toString(), type: 'video', position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1], url: '/assets/videos/sample.mp4' })}>
-            Add Video
-          </Button>
-          <Button onClick={() => handleNewElement({ id: Date.now().toString(), type: 'text', position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1], content: 'New Text' })}>
-            Add Text
-          </Button>
-          <Button onClick={handleAddModel}>Add New Model</Button>
-        </div>
-        <div className={styles.arScene}>
-          <Canvas ref={canvasRef}>
-            <ARScene />
-            <ambientLight intensity={0.5} />
-            <pointLight position={10, 10, 10} />
-            <OrbitControls />
-          </Canvas>
-        </div>
-      </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 };
