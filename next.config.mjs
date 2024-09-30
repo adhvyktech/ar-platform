@@ -52,6 +52,8 @@ const nextConfig = {
   images: {
     domains: ['api.qrserver.com'],
   },
+  // Transpile the 'three' package
+  transpilePackages: ['three'],
 };
 
 export default nextConfig;

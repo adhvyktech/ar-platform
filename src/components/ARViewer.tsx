@@ -1,21 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Camera, CameraOff } from 'lucide-react';
 
-// Define the GLTFLoader type
-type GLTFLoaderType = new () => {
-  load: (
-    url: string,
-    onLoad: (gltf: { scene: THREE.Object3D }) => void,
-    onProgress?: (event: ProgressEvent<EventTarget>) => void,
-    onError?: (event: ErrorEvent) => void
-  ) => void;
-};
-
-let GLTFLoader: GLTFLoaderType;
+// We'll define these types to use later
+type OrbitControlsType = any;
+type GLTFLoaderType = any;
 
 interface ARViewerProps {
   targetId: string;
@@ -30,15 +21,24 @@ const ARViewer: React.FC<ARViewerProps> = ({ targetId, markerUrl, targetUrl }) =
   const [isCameraActive, setIsCameraActive] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      import('three/examples/jsm/loaders/GLTFLoader').then((module) => {
-        GLTFLoader = module.GLTFLoader as GLTFLoaderType;
-        initScene();
-      });
-    }
-  }, []);
+    let OrbitControls: OrbitControlsType;
+    let GLTFLoader: GLTFLoaderType;
 
-  const initScene = () => {
+    const loadDependencies = async () => {
+      const THREE = await import('three');
+      const OrbitControlsModule = await import('three/examples/jsm/controls/OrbitControls');
+      const GLTFLoaderModule = await import('three/examples/jsm/loaders/GLTFLoader');
+
+      OrbitControls = OrbitControlsModule.OrbitControls;
+      GLTFLoader = GLTFLoaderModule.GLTFLoader;
+
+      initScene(THREE, OrbitControls, GLTFLoader);
+    };
+
+    loadDependencies();
+  }, [targetId, markerUrl, targetUrl]);
+
+  const initScene = (THREE: typeof import('three'), OrbitControls: OrbitControlsType, GLTFLoader: GLTFLoaderType) => {
     if (!targetId || !markerUrl || !targetUrl || !canvasRef.current) {
       setError('Invalid target information or scene reference');
       setIsLoading(false);
