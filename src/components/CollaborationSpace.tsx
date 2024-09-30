@@ -1,131 +1,31 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import { OrbitControls, useGLTF, Html, Text } from '@react-three/drei';
+import React, { useEffect, useRef, useState } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, useGLTF, Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Users, MessageSquare, Share2, Save } from 'lucide-react';
-import io from 'socket.io-client';
-import styles from '../styles/components/CollaborationSpace.module.css';
+import Image from 'next/image';
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
-interface User {
-  id: string;
-  name: string;
-  avatar: string;
-  color: string;
+interface CollaborationSpaceProps {
+  // Add any props if needed
 }
 
-interface ARElement {
-  id: string;
-  type: 'model' | 'image' | 'video' | 'text';
-  position: [number, number, number];
-  rotation: [number, number, number];
-  scale: [number, number, number];
-  content?: string;
-  url?: string;
-}
+const Model = ({ position }: { position: [number, number, number] }) => {
+  const { scene } = useGLTF('/path/to/your/model.glb');
+  return <primitive object={scene.clone()} position={position} scale={[0.5, 0.5, 0.5]} />;
+};
 
-interface ChatMessage {
-  id: string;
-  userId: string;
-  message: string;
-  timestamp: Date;
-}
-
-const socket = io('http://localhost:3001'); // Replace with your actual WebSocket server URL
-
-const CollaborationSpace: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [elements, setElements] = useState<ARElement[]>([]);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [messageInput, setMessageInput] = useState('');
-  const chatContainerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+const CollaborationSpace: React.FC<CollaborationSpaceProps> = () => {
   const [models, setModels] = useState<{ id: number; position: [number, number, number] }[]>([]);
-
-  const { scene: modelScene } = useGLTF('/path/to/your/model.glb');
+  const [messages, setMessages] = useState<string[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    // Simulating user login
-    const user: User = {
-      id: 'user1',
-      name: 'John Doe',
-      avatar: '/placeholder.svg?height=40&width=40',
-      color: '#ff0000',
-    };
-    setCurrentUser(user);
-    socket.emit('join', user);
-
-    socket.on('users', (connectedUsers: User[]) => {
-      setUsers(connectedUsers);
-    });
-
-    socket.on('elementUpdate', (updatedElement: ARElement) => {
-      setElements((prevElements) =>
-        prevElements.map((el) => (el.id === updatedElement.id ? updatedElement : el))
-      );
-    });
-
-    socket.on('newElement', (newElement: ARElement) => {
-      setElements((prevElements) => [...prevElements, newElement]);
-    });
-
-    socket.on('deleteElement', (elementId: string) => {
-      setElements((prevElements) => prevElements.filter((el) => el.id !== elementId));
-    });
-
-    socket.on('chatMessage', (message: ChatMessage) => {
-      setChatMessages((prevMessages) => [...prevMessages, message]);
-    });
-
-    // Your initialization code here
-
-    return () => {
-      socket.off('users');
-      socket.off('elementUpdate');
-      socket.off('newElement');
-      socket.off('deleteElement');
-      socket.off('chatMessage');
-    };
+    // Initialize WebSocket connection or any other setup
   }, []);
-
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  }, [chatMessages]);
-
-  const handleElementUpdate = (updatedElement: ARElement) => {
-    socket.emit('elementUpdate', updatedElement);
-  };
-
-  const handleNewElement = (newElement: ARElement) => {
-    socket.emit('newElement', newElement);
-  };
-
-  const handleDeleteElement = (elementId: string) => {
-    socket.emit('deleteElement', elementId);
-  };
-
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (messageInput.trim() && currentUser) {
-      const newMessage: ChatMessage = {
-        id: Date.now().toString(),
-        userId: currentUser.id,
-        message: messageInput.trim(),
-        timestamp: new Date(),
-      };
-      socket.emit('chatMessage', newMessage);
-      setMessageInput('');
-    }
-  };
 
   const handleAddModel = () => {
     const newModel = {
@@ -135,84 +35,13 @@ const CollaborationSpace: React.FC = () => {
     setModels((prevModels) => [...prevModels, newModel]);
   };
 
-  // AR Scene Component
-  const ARScene: React.FC = () => {
-    const { scene } = useThree();
-    const [loadedModels, setLoadedModels] = useState<THREE.Object3D[]>([]);
-
-    // Load models outside of the callback
-    useEffect(() => {
-      const loadModel = async (url: string) => {
-        const { scene: modelScene } = await useGLTF(url);
-        setLoadedModels((prevModels) => [...prevModels, modelScene.clone()]);
-      };
-
-      elements.forEach((element) => {
-        if (element.type === 'model' && element.url) {
-          loadModel(element.url);
-        }
-      });
-
-      return () => {
-        scene.children.forEach((child) => {
-          if (child.name.startsWith('element-')) {
-            scene.remove(child);
-          }
-        });
-      };
-    }, [elements, scene]);
-
-    // Add elements to the scene based on their types
-    useEffect(() => {
-      elements.forEach((element, index) => {
-        let object: THREE.Object3D | null = null;
-
-        if (loadedModels[index]) {
-          object = loadedModels[index];
-        } else if (element.type === 'image' || element.type === 'video') {
-          const geometry = new THREE.PlaneGeometry(1, 1);
-          const material = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
-          if (element.type === 'image') {
-            const texture = new THREE.TextureLoader().load(element.url!);
-            material.map = texture;
-          } else {
-            const video = document.createElement('video');
-            video.src = element.url!;
-            video.loop = true;
-            video.muted = true;
-            video.play();
-            const texture = new THREE.VideoTexture(video);
-            material.map = texture;
-          }
-          object = new THREE.Mesh(geometry, material);
-        } else if (element.type === 'text') {
-          object = new Text(element.content || '', {
-            font: '/path/to/your/font.ttf',
-            fontSize: 0.5,
-            color: 0xffffff,
-          });
-        }
-
-        if (object) {
-          object.position.set(...element.position);
-          object.rotation.set(...element.rotation);
-          object.scale.set(...element.scale);
-          object.name = `element-${element.id}`;
-          scene.add(object);
-        }
-      });
-
-      // Add models from the new state
-      models.forEach((model) => {
-        const modelObject = modelScene.clone();
-        modelObject.position.set(...model.position);
-        modelObject.name = `model-${model.id}`;
-        scene.add(modelObject);
-      });
-
-    }, [elements, loadedModels, scene, models]);
-
-    return null;
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newMessage.trim()) {
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+      setNewMessage('');
+      // Send message through WebSocket or other communication channel
+    }
   };
 
   return (
@@ -229,23 +58,25 @@ const CollaborationSpace: React.FC = () => {
               <pointLight position={[10, 10, 10]} />
               <OrbitControls />
               {models.map((model) => (
-                <primitive
-                  key={model.id}
-                  object={modelScene.clone()}
-                  position={model.position}
-                  scale={[0.5, 0.5, 0.5]}
-                />
+                <Model key={model.id} position={model.position} />
               ))}
-              <ARScene />
+              <Text
+                position={[0, 2, 0]}
+                fontSize={0.5}
+                color="white"
+                anchorX="center"
+                anchorY="middle"
+              >
+                Collaboration Space
+              </Text>
             </Canvas>
           </div>
           <div className="w-1/4 h-full overflow-y-auto p-4 bg-gray-100">
             <h3 className="text-lg font-semibold mb-4">Chat</h3>
-            <div className="space-y-2" ref={chatContainerRef}>
-              {chatMessages.map((message) => (
-                <div key={message.id} className="bg-white p-2 rounded shadow">
-                  <strong>{users.find((u) => u.id === message.userId)?.name}: </strong>
-                  {message.message}
+            <div className="space-y-2">
+              {messages.map((message, index) => (
+                <div key={index} className="bg-white p-2 rounded shadow">
+                  {message}
                 </div>
               ))}
             </div>
@@ -257,8 +88,8 @@ const CollaborationSpace: React.FC = () => {
             <div className="flex space-x-2">
               <Input
                 type="text"
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type a message..."
                 className="flex-grow"
               />
