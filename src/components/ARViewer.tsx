@@ -1,106 +1,58 @@
-import React, { useEffect, useRef, useState } from 'react';
-import * as THREE from 'three';
+import React, { useRef, useState } from 'react'
+import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
+import { OrbitControls, useGLTF } from '@react-three/drei'
+import * as THREE from 'three'
+import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, Camera, CameraOff } from 'lucide-react';
-
-// We'll define these types to use later
-type OrbitControlsType = any;
-type GLTFLoaderType = any;
+import { Loader2, Camera, CameraOff } from 'lucide-react'
 
 interface ARViewerProps {
-  targetId: string;
-  markerUrl: string;
-  targetUrl: string;
+  targetId: string
+  markerUrl: string
+  targetUrl: string
+}
+
+function Model({ url }: { url: string }) {
+  const gltf = useGLTF(url) as GLTF
+  return <primitive object={gltf.scene} />
+}
+
+function Scene({ targetUrl }: { targetUrl: string }) {
+  const { camera } = useThree()
+  
+  React.useEffect(() => {
+    camera.position.z = 5
+  }, [camera])
+
+  return (
+    <>
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[0, 5, 0]} intensity={0.7} />
+      <Model url={targetUrl} />
+      <OrbitControls />
+    </>
+  )
 }
 
 const ARViewer: React.FC<ARViewerProps> = ({ targetId, markerUrl, targetUrl }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isCameraActive, setIsCameraActive] = useState(false)
 
-  useEffect(() => {
-    let OrbitControls: OrbitControlsType;
-    let GLTFLoader: GLTFLoaderType;
-
-    const loadDependencies = async () => {
-      const THREE = await import('three');
-      const OrbitControlsModule = await import('three/examples/jsm/controls/OrbitControls');
-      const GLTFLoaderModule = await import('three/examples/jsm/loaders/GLTFLoader');
-
-      OrbitControls = OrbitControlsModule.OrbitControls;
-      GLTFLoader = GLTFLoaderModule.GLTFLoader;
-
-      initScene(THREE, OrbitControls, GLTFLoader);
-    };
-
-    loadDependencies();
-  }, [targetId, markerUrl, targetUrl]);
-
-  const initScene = (THREE: typeof import('three'), OrbitControls: OrbitControlsType, GLTFLoader: GLTFLoaderType) => {
-    if (!targetId || !markerUrl || !targetUrl || !canvasRef.current) {
-      setError('Invalid target information or scene reference');
-      setIsLoading(false);
-      return;
+  React.useEffect(() => {
+    if (!targetId || !markerUrl || !targetUrl) {
+      setError('Invalid target information')
+      setIsLoading(false)
+    } else {
+      setIsLoading(false)
     }
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-
-    const controls = new OrbitControls(camera, renderer.domElement);
-
-    const ambientLight = new THREE.AmbientLight(0xcccccc, 0.5);
-    scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
-    directionalLight.position.set(0, 5, 0);
-    scene.add(directionalLight);
-
-    camera.position.z = 5;
-
-    const loader = new GLTFLoader();
-    loader.load(
-      targetUrl,
-      (gltf) => {
-        scene.add(gltf.scene);
-        setIsLoading(false);
-        setIsCameraActive(true);
-      },
-      undefined,
-      (error) => {
-        console.error('Error loading 3D model:', error);
-        setError('Failed to load 3D model');
-        setIsLoading(false);
-      }
-    );
-
-    const animate = () => {
-      requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  };
+  }, [targetId, markerUrl, targetUrl])
 
   const toggleCamera = () => {
-    setIsCameraActive(!isCameraActive);
+    setIsCameraActive(!isCameraActive)
     // In a real implementation, you would start/stop the AR.js source here
-  };
+  }
 
   if (error) {
     return (
@@ -113,27 +65,35 @@ const ARViewer: React.FC<ARViewerProps> = ({ targetId, markerUrl, targetUrl }) =
           <Button onClick={() => window.location.reload()}>Retry</Button>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
-    <div className="ar-viewer">
+    <div className="ar-viewer" style={{ width: '100%', height: '100vh' }}>
       {isLoading && (
         <div className="loading-overlay">
           <Loader2 className="loading-spinner" />
           <p>Loading AR experience...</p>
         </div>
       )}
-      <canvas ref={canvasRef} className="ar-scene" />
+      <Canvas>
+        <Scene targetUrl={targetUrl} />
+      </Canvas>
       <Button
         className="camera-toggle"
         onClick={toggleCamera}
         variant="outline"
+        style={{
+          position: 'absolute',
+          bottom: '20px',
+          right: '20px',
+          zIndex: 1000
+        }}
       >
         {isCameraActive ? <CameraOff /> : <Camera />}
       </Button>
     </div>
-  );
-};
+  )
+}
 
-export default ARViewer;
+export default ARViewer
