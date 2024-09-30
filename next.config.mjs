@@ -43,6 +43,10 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Add image configuration
+  images: {
+    domains: ['api.qrserver.com'],
+  },
 };
 
 export default nextConfig;
