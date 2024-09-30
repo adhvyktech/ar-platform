@@ -2,186 +2,235 @@ import React, { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Slider } from "@/components/ui/slider"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Cube, Image as ImageIcon, Video, Text, Trash2, Copy, Eye, EyeOff } from 'lucide-react';
+import { Box, Image as ImageIcon, Video, Type, Trash2, Copy, Eye, EyeOff } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import styles from '../styles/components/ARBuilder.module.css';
 
 interface ARElement {
   id: string;
-  type: 'model' | 'image' | 'video' | 'text';
-  name: string;
-  url: string;
-  position: [number, number, number];
-  rotation: [number, number, number];
-  scale: [number, number, number];
-  content?: string;
+  type: 'image' | 'video' | 'text' | '3d';
+  content: string;
+  position: { x: number; y: number; z: number };
+  rotation: { x: number; y: number; z: number };
+  scale: { x: number; y: number; z: number };
 }
 
-interface ARBuilderProps {
-  elements: ARElement[];
-  onElementUpdate: (id: string, updates: Partial<ARElement>)
-
- => void;
-  onElementAdd: (element: ARElement) => void;
-}
-
-const ARBuilder: React.FC<ARBuilderProps> = ({ elements, onElementUpdate, onElementAdd }) => {
+const ARBuilder: React.FC = () => {
+  const [elements, setElements] = useState<ARElement[]>([]);
   const [selectedElement, setSelectedElement] = useState<ARElement | null>(null);
 
-  const handleElementSelect = (element: ARElement) => {
-    setSelectedElement(element);
-  };
-
-  const handleElementDelete = (id: string) => {
-    onElementUpdate(id, { position: [-1000, -1000, -1000] }); // Move off-screen instead of deleting
-  };
-
-  const handleElementDuplicate = (element: ARElement) => {
-    const newElement = {
-      ...element,
-      id: Date.now().toString(),
-      name: `${element.name} (Copy)`,
-      position: [element.position[0] + 0.5, element.position[1] + 0.5, element.position[2]],
-    };
-    onElementAdd(newElement);
-  };
-
   const onDrop = useCallback((acceptedFiles: File[]) => {
+    // Handle file drop
     acceptedFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onload = () => {
-        const binaryStr = reader.result;
-        // Here you would typically upload the file to your backend
-        // For now, we'll just create a new element with a local URL
         const newElement: ARElement = {
           id: Date.now().toString(),
-          name: file.name,
-          type: file.type.startsWith('image/') ? 'image' : file.type.startsWith('video/') ? 'video' : 'model',
-          url: URL.createObjectURL(file),
-          position: [0, 0, 0],
-          rotation: [0, 0, 0],
-          scale: [1, 1, 1],
+          type: file.type.startsWith('image/') ? 'image' : 'video',
+          content: reader.result as string,
+          position: { x: 0, y: 0, z: 0 },
+          rotation: { x: 0, y: 0, z: 0 },
+          scale: { x: 1, y: 1, z: 1 },
         };
-        onElementAdd(newElement);
+        setElements((prevElements) => [...prevElements, newElement]);
       };
-      reader.readAsArrayBuffer(file);
+      reader.readAsDataURL(file);
     });
-  }, [onElementAdd]);
+  }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
+  const addTextElement = () => {
+    const newElement: ARElement = {
+      id: Date.now().toString(),
+      type: 'text',
+      content: 'New Text',
+      position: { x: 0, y: 0, z: 0 },
+      rotation: { x: 0, y: 0, z: 0 },
+      scale: { x: 1, y: 1, z: 1 },
+    };
+    setElements((prevElements) => [...prevElements, newElement]);
+  };
+
+  const add3DElement = () => {
+    const newElement: ARElement = {
+      id: Date.now().toString(),
+      type: '3d',
+      content: '/path/to/default/3d/model.glb',
+      position: { x: 0, y: 0, z: 0 },
+      rotation: { x: 0, y: 0, z: 0 },
+      scale: { x: 1, y: 1, z: 1 },
+    };
+    setElements((prevElements) => [...prevElements, newElement]);
+  };
+
+  const updateElement = (id: string, updates: Partial<ARElement>) => {
+    setElements((prevElements) =>
+      prevElements.map((element) =>
+        element.id === id ? { ...element, ...updates } : element
+      )
+    );
+  };
+
+  const deleteElement = (id: string) => {
+    setElements((prevElements) => prevElements.filter((element) => element.id !== id));
+    if (selectedElement?.id === id) {
+      setSelectedElement(null);
+    }
+  };
+
+  const duplicateElement = (id: string) => {
+    const elementToDuplicate = elements.find((element) => element.id === id);
+    if (elementToDuplicate) {
+      const newElement = {
+        ...elementToDuplicate,
+        id: Date.now().toString(),
+        position: {
+          x: elementToDuplicate.position.x + 0.1,
+          y: elementToDuplicate.position.y + 0.1,
+          z: elementToDuplicate.position.z,
+        },
+      };
+      setElements((prevElements) => [...prevElements, newElement]);
+    }
+  };
+
   return (
     <div className={styles.arBuilder}>
-      <div {...getRootProps()} className={styles.dropzone}>
-        <input {...getInputProps()} />
-        {isDragActive ? (
-          <p>Drop the files here ...</p>
-        ) : (
-          <p>Drag 'n' drop some files here to add them to the AR scene</p>
-        )}
-      </div>
-      <div className={styles.elementList}>
-        {elements.map(element => (
-          <Card
-            key={element.id}
-            className={`${styles.elementCard} ${selectedElement?.id === element.id ? styles.selected : ''}`}
-            onClick={() => handleElementSelect(element)}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>{element.name}</span>
-                <div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onElementUpdate(element.id, { visible: !element.visible })}
-                  >
-                    {element.visible ? <Eye /> : <EyeOff />}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleElementDuplicate(element)}
-                  >
-                    <Copy />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleElementDelete(element.id)}
-                  >
-                    <Trash2 />
-                  </Button>
-                </div>
-              </CardTitle>
-              <CardDescription>{element.type}</CardDescription>
-            </CardHeader>
-          </Card>
-        ))}
-      </div>
+      <Card className={styles.elementList}>
+        <CardHeader>
+          <CardTitle>AR Elements</CardTitle>
+          <CardDescription>Drag and drop or add elements to your AR scene</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div {...getRootProps()} className={styles.dropzone}>
+            <input {...getInputProps()} />
+            {isDragActive ? (
+              <p>Drop the files here ...</p>
+            ) : (
+              <p>Drag 'n' drop some files here, or click to select files</p>
+            )}
+          </div>
+          <div className={styles.addButtons}>
+            <Button onClick={addTextElement}><Type className="mr-2 h-4 w-4" /> Add Text</Button>
+            <Button onClick={add3DElement}><Box className="mr-2 h-4 w-4" /> Add 3D Model</Button>
+          </div>
+          <ul className={styles.elementsList}>
+            {elements.map((element) => (
+              <li key={element.id} onClick={() => setSelectedElement(element)}>
+                {element.type === 'image' && <ImageIcon />}
+                {element.type === 'video' && <Video />}
+                {element.type === 'text' && <Type />}
+                {element.type === '3d' && <Box />}
+                <span>{element.type} - {element.id}</span>
+                <Button variant="ghost" size="icon" onClick={() => deleteElement(element.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => duplicateElement(element.id)}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
       {selectedElement && (
         <Card className={styles.elementProperties}>
           <CardHeader>
-            <CardTitle>{selectedElement.name}</CardTitle>
-            <CardDescription>{selectedElement.type}</CardDescription>
+            <CardTitle>Element Properties</CardTitle>
+            <CardDescription>Edit the properties of the selected element</CardDescription>
           </CardHeader>
           <CardContent>
             <div className={styles.propertyGroup}>
+              <Label htmlFor="elementType">Type</Label>
+              <Select
+                value={selectedElement.type}
+                onValueChange={(value) => updateElement(selectedElement.id, { type: value as ARElement['type'] })}
+              >
+                <SelectTrigger id="elementType">
+                  <SelectValue placeholder="Select element type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="image">Image</SelectItem>
+                  <SelectItem value="video">Video</SelectItem>
+                  <SelectItem value="text">Text</SelectItem>
+                  <SelectItem value="3d">3D Model</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedElement.type === 'text' && (
+              <div className={styles.propertyGroup}>
+                <Label htmlFor="textContent">Text Content</Label>
+                <Input
+                  id="textContent"
+                  value={selectedElement.content}
+                  onChange={(e) => updateElement(selectedElement.id, { content: e.target.value })}
+                />
+              </div>
+            )}
+            <div className={styles.propertyGroup}>
               <Label>Position</Label>
               <div className={styles.vectorInput}>
-                {['x', 'y', 'z'].map((axis, index) => (
-                  <Input
-                    key={axis}
-                    type="number"
-                    value={selectedElement.position[index]}
-                    onChange={(e) => {
-                      const newPosition = [...selectedElement.position];
-                      newPosition[index] = parseFloat(e.target.value);
-                      onElementUpdate(selectedElement.id, { position: newPosition as [number, number, number] });
-                    }}
-                  />
-                ))}
+                <Input
+                  type="number"
+                  value={selectedElement.position.x}
+                  onChange={(e) => updateElement(selectedElement.id, { position: { ...selectedElement.position, x: parseFloat(e.target.value) } })}
+                />
+                <Input
+                  type="number"
+                  value={selectedElement.position.y}
+                  onChange={(e) => updateElement(selectedElement.id, { position: { ...selectedElement.position, y: parseFloat(e.target.value) } })}
+                />
+                <Input
+                  type="number"
+                  value={selectedElement.position.z}
+                  onChange={(e) => updateElement(selectedElement.id, { position: { ...selectedElement.position, z: parseFloat(e.target.value) } })}
+                />
               </div>
             </div>
             <div className={styles.propertyGroup}>
               <Label>Rotation</Label>
               <div className={styles.vectorInput}>
-                {['x', 'y', 'z'].map((axis, index) => (
-                  <Input
-                    key={axis}
-                    type="number"
-                    value={selectedElement.rotation[index]}
-                    onChange={(e) => {
-                      const newRotation = [...selectedElement.rotation];
-                      newRotation[index] = parseFloat(e.target.value);
-                      onElementUpdate(selectedElement.id, { rotation: newRotation as [number, number, number] });
-                    }}
-                  />
-                ))}
+                <Input
+                  type="number"
+                  value={selectedElement.rotation.x}
+                  onChange={(e) => updateElement(selectedElement.id, { rotation: { ...selectedElement.rotation, x: parseFloat(e.target.value) } })}
+                />
+                <Input
+                  type="number"
+                  value={selectedElement.rotation.y}
+                  onChange={(e) => updateElement(selectedElement.id, { rotation: { ...selectedElement.rotation, y: parseFloat(e.target.value) } })}
+                />
+                <Input
+                  type="number"
+                  value={selectedElement.rotation.z}
+                  onChange={(e) => updateElement(selectedElement.id, { rotation: { ...selectedElement.rotation, z: parseFloat(e.target.value) } })}
+                />
               </div>
             </div>
             <div className={styles.propertyGroup}>
               <Label>Scale</Label>
-              <Slider
-                value={[selectedElement.scale[0]]}
-                min={0.1}
-                max={2}
-                step={0.1}
-                onValueChange={([value]) => onElementUpdate(selectedElement.id, { scale: [value, value, value] })}
-              />
-            </div>
-            {selectedElement.type === 'text' && (
-              <div className={styles.propertyGroup}>
-                <Label>Content</Label>
+              <div className={styles.vectorInput}>
                 <Input
-                  value={selectedElement.content || ''}
-                  onChange={(e) => onElementUpdate(selectedElement.id, { content: e.target.value })}
+                  type="number"
+                  value={selectedElement.scale.x}
+                  onChange={(e) => updateElement(selectedElement.id, { scale: { ...selectedElement.scale, x: parseFloat(e.target.value) } })}
+                />
+                <Input
+                  type="number"
+                  value={selectedElement.scale.y}
+                  onChange={(e) => updateElement(selectedElement.id, { scale: { ...selectedElement.scale, y: parseFloat(e.target.value) } })}
+                />
+                <Input
+                  type="number"
+                  value={selectedElement.scale.z}
+                  onChange={(e) => updateElement(selectedElement.id, { scale: { ...selectedElement.scale, z: parseFloat(e.target.value) } })}
                 />
               </div>
-            )}
+            </div>
           </CardContent>
         </Card>
       )}
