@@ -55,9 +55,9 @@ const App: React.FC = () => {
               path="/viewer" 
               element={
                 <ARViewerComponent 
-                  targetId="your-target-id" 
+                  targetId="sample-target-id" 
                   markerUrl="/path/to/marker.patt" 
-                  targetUrl="/path/to/target.glb" 
+                  targetUrl="/path/to/sample-model.glb" 
                 />
               } 
             />
