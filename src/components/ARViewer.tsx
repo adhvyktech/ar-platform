@@ -1,10 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Camera, CameraOff } from 'lucide-react';
+
+let GLTFLoader;
+if (typeof window !== 'undefined') {
+  import('three/examples/jsm/loaders/GLTFLoader').then((module) => {
+    GLTFLoader = module.GLTFLoader;
+  });
+}
 
 interface ARViewerProps {
   targetId: string;
